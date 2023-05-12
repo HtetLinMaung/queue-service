@@ -1,0 +1,43 @@
+consumed message from this api is passed to the requesting rest api with post method. queue and rest url mappings are comming from config file.
+
+async (req, res) => {
+  const { message, queue } = req.body;
+  const { MQ_CONNECTION, MQ_TYPE, KAFKA_BROKERS } = process.env;
+
+  if (MQ_TYPE === "rabbitmq") {
+    const conn = await amqp.connect(MQ_CONNECTION);
+    const ch = await conn.createChannel();
+    await ch.assertQueue(queue, { durable: false });
+    await ch.sendToQueue(queue, Buffer.from(message));
+    log(` [x] Sent '${message}'`);
+    await ch.close();
+    await conn.close();
+    res.json({
+      code: 200,
+      message: "Message sent to RabbitMQ!",
+    });
+  } else if (MQ_TYPE === "kafka") {
+    const kafka = new Kafka({
+      clientId: "queue-service",
+      brokers: KAFKA_BROKERS.split(","),
+    });
+    const producer = kafka.producer();
+    await producer.connect();
+    await producer.send({
+      topic: queue,
+      messages: [{ value: message }],
+    });
+    log(` [x] Sent '${message}'`);
+    await producer.disconnect();
+    res.json({
+      code: 200,
+      message: "Message sent to Kafka!",
+    });
+  } else {
+    throwErrorResponse(
+      400,
+      "Invalid MQ_TYPE environment variable. It should be either 'rabbitmq' or 'kafka'."
+    );
+  }
+}
+
