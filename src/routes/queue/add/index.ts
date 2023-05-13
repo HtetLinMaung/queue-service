@@ -9,7 +9,8 @@ import {
 } from "../../../utils/setup-connections";
 
 export default brewBlankExpressFunc(async (req, res) => {
-  const { API_KEY, MQ_TYPE, API_RETRY, API_RETRY_DELAY } = process.env;
+  const { API_KEY, MQ_TYPE, API_RETRY, API_RETRY_DELAY, REQUEUE_DELAY } =
+    process.env;
   const userApiKey = req.get("X-API-Key");
 
   if (!userApiKey || userApiKey !== API_KEY) {
@@ -33,7 +34,11 @@ export default brewBlankExpressFunc(async (req, res) => {
       if (!err && response.status < 400) {
         ch.ack(msg);
       } else {
-        ch.nack(msg, false, true);
+        if (REQUEUE_DELAY) {
+          setTimeout(() => ch.nack(msg, false, true), parseInt(REQUEUE_DELAY));
+        } else {
+          ch.nack(msg, false, true);
+        }
       }
     });
 
