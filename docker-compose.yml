@@ -12,6 +12,8 @@ services:
       - MQ_TYPE=rabbitmq
       - API_KEY=91ff1415fc894d5e
       - API_RETRY_DELAY=1800000
+    volumes:
+      - ./config:/app/config
   rabbitmq:
     image: rabbitmq:3-management
     restart: always
