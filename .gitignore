@@ -6,3 +6,4 @@ aws_lambda
 *.js
 *.js.map
 !jest.config.js
+config
