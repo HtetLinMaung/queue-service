@@ -1,5 +1,6 @@
 {
   "queueApiMapping": {
+    "tasks": "http://localhost:3000/test",
     "my_rabbit_queue": "http://myapi.com/endpoint",
     "my_kafka_topic": "http://myotherapi.com/endpoint"
   }

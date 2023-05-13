@@ -22,25 +22,18 @@ export default brewBlankExpressFunc(async (req, res) => {
   if (MQ_TYPE === "rabbitmq") {
     const conn = getConn();
     const ch = await conn.createChannel();
-    await ch.assertQueue(queue, { durable: false });
-    await ch.sendToQueue(queue, Buffer.from(message));
+    await ch.assertQueue(queue, { durable: true });
+    await ch.sendToQueue(queue, Buffer.from(message), { persistent: true });
     log(` [x] Sent '${message}'`);
 
     ch.consume(queue, async (msg) => {
       const message = msg.content.toString();
       const apiEndpoint = queueApiMapping[queue];
-      const [_, err] = await httpClient.post(
-        apiEndpoint,
-        { message },
-        {},
-        {
-          retry: parseInt(API_RETRY || "99999"),
-          retryDelay: parseInt(API_RETRY_DELAY || "3000"),
-          retryWhen: (res) => !res || res.status >= 400,
-        }
-      );
-      if (!err) {
+      const [response, err] = await httpClient.post(apiEndpoint, { message });
+      if (!err && response.status < 400) {
         ch.ack(msg);
+      } else {
+        ch.nack(msg, false, true);
       }
     });
 

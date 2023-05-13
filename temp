@@ -1,0 +1,8 @@
+curl -X POST \
+  http://localhost:3000/queue/add \
+  -H 'Content-Type: application/json' \
+  -H 'X-API-Key: 91ff1415fc894d5e' \
+  -d '{
+        "message": "test message",
+        "queue": "task"
+      }'
