@@ -9,7 +9,7 @@ import {
 } from "../../../utils/setup-connections";
 
 export default brewBlankExpressFunc(async (req, res) => {
-  const { API_KEY } = process.env;
+  const { API_KEY, MQ_TYPE, API_RETRY, API_RETRY_DELAY } = process.env;
   const userApiKey = req.get("X-API-Key");
 
   if (!userApiKey || userApiKey !== API_KEY) {
@@ -17,7 +17,6 @@ export default brewBlankExpressFunc(async (req, res) => {
   }
 
   const { message, queue } = req.body;
-  const { MQ_TYPE } = process.env;
   const queueApiMapping: any = config.get("queueApiMapping");
 
   if (MQ_TYPE === "rabbitmq") {
@@ -35,8 +34,8 @@ export default brewBlankExpressFunc(async (req, res) => {
         { message },
         {},
         {
-          retry: 99999,
-          retryDelay: 3000,
+          retry: parseInt(API_RETRY || "99999"),
+          retryDelay: parseInt(API_RETRY_DELAY || "3000"),
           retryWhen: (res) => !res || res.status >= 400,
         }
       );
@@ -72,8 +71,8 @@ export default brewBlankExpressFunc(async (req, res) => {
           },
           {},
           {
-            retry: 99999,
-            retryDelay: 3000,
+            retry: parseInt(API_RETRY || "99999"),
+            retryDelay: parseInt(API_RETRY_DELAY || "3000"),
             retryWhen: (res) => !res || res.status >= 400,
           }
         );
