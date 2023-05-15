@@ -6,9 +6,15 @@ import config from "config";
 export const afterWorkerStart = async () => {
   log("after worker started");
   await setupConnections();
-  const { MQ_TYPE, REQUEUE_DELAY } = process.env;
+  const { MQ_TYPE, REQUEUE_DELAY, PREFETCH_COUNT } = process.env;
   const queueApiMapping: any = config.get("queueApiMapping");
   for (const queue in queueApiMapping) {
-    await startConsumer(queue, queueApiMapping, MQ_TYPE, REQUEUE_DELAY);
+    await startConsumer(
+      queue,
+      queueApiMapping,
+      MQ_TYPE,
+      REQUEUE_DELAY,
+      PREFETCH_COUNT
+    );
   }
 };

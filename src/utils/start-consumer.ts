@@ -6,12 +6,18 @@ export default async function startConsumer(
   queue: string,
   queueApiMapping: any,
   MQ_TYPE: string,
-  REQUEUE_DELAY: string
+  REQUEUE_DELAY: string,
+  PREFETCH_COUNT: string
 ) {
   if (MQ_TYPE === "rabbitmq") {
     const conn = getConn();
     const ch = await conn.createChannel();
     await ch.assertQueue(queue, { durable: true });
+
+    // Set prefetch count
+    if (PREFETCH_COUNT) {
+      ch.prefetch(parseInt(PREFETCH_COUNT));
+    }
 
     ch.consume(queue, async (msg) => {
       const message = msg.content.toString();
@@ -30,7 +36,9 @@ export default async function startConsumer(
   } else if (MQ_TYPE === "kafka") {
     const consumer = getConsumer();
     await consumer.connect();
-    await consumer.subscribe({ topic: queue });
+    await consumer.subscribe({
+      topic: queue,
+    });
 
     await consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
