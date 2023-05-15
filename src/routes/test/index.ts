@@ -8,6 +8,7 @@ export default brewBlankExpressFunc(async (req, res) => {
       resolve(null);
     }, 10000);
   });
+  log(`finished processing`);
   res.json({
     code: 200,
     message: "success",

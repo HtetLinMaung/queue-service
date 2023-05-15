@@ -1,6 +1,5 @@
 import { brewBlankExpressFunc, throwErrorResponse } from "code-alchemy";
 import { log } from "starless-logger";
-import config from "config";
 import {
   getConn,
   getConsumer,
@@ -8,15 +7,14 @@ import {
 } from "../../../utils/setup-connections";
 
 export default brewBlankExpressFunc(async (req, res) => {
-  const { API_KEY, MQ_TYPE, REQUEUE_DELAY } = process.env;
+  const { API_KEY, MQ_TYPE } = process.env;
   const userApiKey = req.get("X-API-Key");
 
   if (!userApiKey || userApiKey !== API_KEY) {
     throwErrorResponse(401, "Unauthorized");
   }
 
-  const { message, queue, url } = req.body;
-  const queueApiMapping: any = config.get("queueApiMapping");
+  const { message, queue } = req.body;
 
   if (MQ_TYPE === "rabbitmq") {
     const conn = getConn();
@@ -24,12 +22,6 @@ export default brewBlankExpressFunc(async (req, res) => {
     await ch.assertQueue(queue, { durable: true });
     await ch.sendToQueue(queue, Buffer.from(message), { persistent: true });
     log(` [x] Sent '${message}'`);
-
-    // if (!queueApiMapping.has(queue)) {
-    //   const newQueueApiMapping = { ...queueApiMapping };
-    //   newQueueApiMapping[queue] = url;
-    //   await startConsumer(queue, queueApiMapping, MQ_TYPE, REQUEUE_DELAY);
-    // }
 
     res.json({
       code: 200,
@@ -47,11 +39,6 @@ export default brewBlankExpressFunc(async (req, res) => {
     const consumer = getConsumer();
     await consumer.connect();
     await consumer.subscribe({ topic: queue });
-
-    // if (!queueApiMapping.has(queue)) {
-    //   queueApiMapping[queue] = url;
-    //   await startConsumer(queue, queueApiMapping, MQ_TYPE, REQUEUE_DELAY);
-    // }
 
     res.json({
       code: 200,

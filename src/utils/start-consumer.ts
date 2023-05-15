@@ -21,7 +21,10 @@ export default async function startConsumer(
 
     ch.consume(queue, async (msg) => {
       const message = msg.content.toString();
-      const apiEndpoint = queueApiMapping[queue];
+      const apiEndpoint =
+        typeof queueApiMapping[queue] == "object"
+          ? queueApiMapping[queue].url
+          : queueApiMapping[queue];
       const [response, err] = await httpClient.post(apiEndpoint, { message });
       if (!err && response.status < 400) {
         ch.ack(msg);

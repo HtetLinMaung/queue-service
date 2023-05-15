@@ -12,6 +12,7 @@ services:
       - MQ_TYPE=rabbitmq
       - API_KEY=91ff1415fc894d5e
       - REQUEUE_DELAY=0
+      - PREFETCH_COUNT=1
     volumes:
       - ./config:/app/config
   rabbitmq:

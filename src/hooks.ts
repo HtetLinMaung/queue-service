@@ -8,13 +8,22 @@ export const afterWorkerStart = async () => {
   await setupConnections();
   const { MQ_TYPE, REQUEUE_DELAY, PREFETCH_COUNT } = process.env;
   const queueApiMapping: any = config.get("queueApiMapping");
+
   for (const queue in queueApiMapping) {
-    await startConsumer(
-      queue,
-      queueApiMapping,
-      MQ_TYPE,
-      REQUEUE_DELAY,
-      PREFETCH_COUNT
-    );
+    let consumerCount =
+      typeof queueApiMapping[queue] == "object" &&
+      queueApiMapping[queue].consumerCount
+        ? queueApiMapping[queue].consumerCount
+        : 1;
+
+    for (let i = 0; i < consumerCount; i++) {
+      await startConsumer(
+        queue,
+        queueApiMapping,
+        MQ_TYPE,
+        REQUEUE_DELAY,
+        PREFETCH_COUNT
+      );
+    }
   }
 };
