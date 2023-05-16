@@ -24,6 +24,7 @@ services:
   queue-service:
     image: htetlinmaung/queue-service:latest
     environment:
+      - express_handler_mode=native
       - MQ_CONNECTION=amqp://rabbitmq:5672
       - MQ_TYPE=rabbitmq
       - API_KEY=91ff1415fc894d5e
