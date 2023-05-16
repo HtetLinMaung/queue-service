@@ -6,3 +6,62 @@ curl -X POST \
         "message": "test message",
         "queue": "task"
       }'
+
+write a documentation.md for queue-service microservice
+
+other microservices can add queue with /queue/add apiEndpoint
+
+async (req, res) => {
+  const { API_KEY, MQ_TYPE } = process.env;
+  const userApiKey = req.get("X-API-Key");
+
+  if (!userApiKey || userApiKey !== API_KEY) {
+    throwErrorResponse(401, "Unauthorized");
+  }
+
+  const { message, queue } = req.body;
+
+  if (MQ_TYPE === "rabbitmq") {
+    const conn = getConn();
+    const ch = await conn.createChannel();
+    await ch.assertQueue(queue, { durable: true });
+    await ch.sendToQueue(queue, Buffer.from(message), { persistent: true });
+    log(` [x] Sent '${message}'`);
+
+    res.json({
+      code: 200,
+      message: "Message sent to RabbitMQ!",
+    });
+  } else if (MQ_TYPE === "kafka") {
+    const producer = getProducer();
+    await producer.connect();
+    await producer.send({
+      topic: queue,
+      messages: [{ value: message }],
+    });
+    log(` [x] Sent '${message}'`);
+
+    const consumer = getConsumer();
+    await consumer.connect();
+    await consumer.subscribe({ topic: queue });
+
+    res.json({
+      code: 200,
+      message: "Message sent to Kafka!",
+    });
+  } else {
+    throwErrorResponse(
+      400,
+      "Invalid MQ_TYPE environment variable. It should be either 'rabbitmq' or 'kafka'."
+    );
+  }
+}
+
+these environments can be Set
+
+- MQ_CONNECTION=amqp://rabbitmq:5672
+      - MQ_TYPE=rabbitmq
+      - API_KEY=91ff1415fc894d5e
+      - REQUEUE_DELAY=0
+      - PREFETCH_COUNT=1
+
