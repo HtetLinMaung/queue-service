@@ -17,6 +17,7 @@ export const afterWorkerStart = async () => {
         : 1;
 
     for (let i = 0; i < consumerCount; i++) {
+      log(`start consumer: ${i + 1}`);
       await startConsumer(
         queue,
         queueApiMapping,

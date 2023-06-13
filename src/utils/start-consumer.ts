@@ -30,12 +30,14 @@ export default async function startConsumer(
       const [response, err] = await httpClient.post(apiEndpoint, { message });
       if (!err && response.status < 400) {
         ch.ack(msg);
+        log(`consumer successful for message: ${message}`);
       } else {
         if (REQUEUE_DELAY) {
           setTimeout(() => ch.nack(msg, false, true), parseInt(REQUEUE_DELAY));
         } else {
           ch.nack(msg, false, true);
         }
+        log(`retrying ${message}`);
       }
     });
   } else if (MQ_TYPE === "kafka") {
