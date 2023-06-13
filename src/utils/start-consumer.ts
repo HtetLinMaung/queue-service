@@ -21,7 +21,8 @@ export default async function startConsumer(
     }
 
     ch.consume(queue, async (msg) => {
-      log(`Consumer run with message: ${msg}`);
+      log(`Consumer run with message: `);
+      log(msg);
       const message = msg.content.toString();
       const apiEndpoint =
         typeof queueApiMapping[queue] == "object"

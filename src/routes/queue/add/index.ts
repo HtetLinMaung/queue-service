@@ -7,6 +7,7 @@ import {
 } from "../../../utils/setup-connections";
 
 export default brewBlankExpressFunc(async (req, res) => {
+  log(req.body);
   const { API_KEY, MQ_TYPE } = process.env;
   const userApiKey = req.get("X-API-Key");
 
