@@ -1,3 +1,4 @@
+import { log } from "starless-logger";
 import { getConn, getConsumer } from "./setup-connections";
 import httpClient from "starless-http";
 
@@ -20,6 +21,7 @@ export default async function startConsumer(
     }
 
     ch.consume(queue, async (msg) => {
+      log(`Consumer run with message: ${msg}`);
       const message = msg.content.toString();
       const apiEndpoint =
         typeof queueApiMapping[queue] == "object"
