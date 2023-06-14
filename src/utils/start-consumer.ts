@@ -22,22 +22,29 @@ export default async function startConsumer(
 
     ch.consume(queue, async (msg) => {
       const message = msg.content.toString();
-      log(`consumer message: ${message}`);
+      log(`consumer trigger with message: ${message}`);
       const apiEndpoint =
         typeof queueApiMapping[queue] == "object"
           ? queueApiMapping[queue].url
           : queueApiMapping[queue];
       const [response, err] = await httpClient.post(apiEndpoint, { message });
+      if (response && response.status && response.data) {
+        console.log({ status: response.status, data: response.data });
+      }
       if (!err && response.status < 400) {
         ch.ack(msg);
         log(`consumer successful for message: ${message}`);
       } else {
         if (REQUEUE_DELAY) {
-          setTimeout(() => ch.nack(msg, false, true), parseInt(REQUEUE_DELAY));
+          log(`waiting ${REQUEUE_DELAY}ms to retry for ${message}`);
+          setTimeout(() => {
+            ch.nack(msg, false, true);
+            log(`retrying for ${message}`);
+          }, parseInt(REQUEUE_DELAY));
         } else {
           ch.nack(msg, false, true);
+          log(`retrying for ${message}`);
         }
-        log(`retrying ${message}`);
       }
     });
   } else if (MQ_TYPE === "kafka") {
