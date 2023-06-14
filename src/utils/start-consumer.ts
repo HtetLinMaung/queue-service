@@ -35,6 +35,9 @@ export default async function startConsumer(
         ch.ack(msg);
         log(`consumer successful for message: ${message}`);
       } else {
+        if (err) {
+          log(err.message);
+        }
         if (REQUEUE_DELAY) {
           log(`waiting ${REQUEUE_DELAY}ms to retry for ${message}`);
           setTimeout(() => {
